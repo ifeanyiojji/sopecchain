@@ -1,6 +1,14 @@
 """
 ScopeChain AI FastAPI Backend - Vercel Serverless Entry Point
 """
+import sys
+import os
+
+# Ensure api/ directory is on Python path for submodule imports
+api_dir = os.path.dirname(os.path.abspath(__file__))
+if api_dir not in sys.path:
+    sys.path.insert(0, api_dir)
+
 import traceback
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
