@@ -1,16 +1,56 @@
 """
 ScopeChain AI FastAPI Backend - Vercel Serverless Entry Point
 """
+import traceback
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from typing import List
-import pandas as pd
 import io
 
-from engine.normalizer import normalize_units, validate_normalized_data
-from engine.calculator import calculate_scope3_with_uncertainty, validate_input_data
-from extractors.pdf_extractor import get_pdf_extractor
-from config.schemas import CalculationResponse, CalculationSummary, CategorySummary
+# Defensive imports - catch any module that fails on Vercel Lambda
+_import_errors = []
+
+try:
+    import pandas as pd
+except ImportError as e:
+    _import_errors.append(f"pandas: {e}")
+    pd = None
+
+try:
+    import numpy as np
+except ImportError as e:
+    _import_errors.append(f"numpy: {e}")
+    np = None
+
+try:
+    from engine.normalizer import normalize_units, validate_normalized_data
+except Exception as e:
+    _import_errors.append(f"engine.normalizer: {e}")
+    normalize_units = None
+    validate_normalized_data = None
+
+try:
+    from engine.calculator import calculate_scope3_with_uncertainty, validate_input_data
+except Exception as e:
+    _import_errors.append(f"engine.calculator: {e}")
+    calculate_scope3_with_uncertainty = None
+    validate_input_data = None
+
+try:
+    from extractors.pdf_extractor import get_pdf_extractor
+except Exception as e:
+    _import_errors.append(f"extractors.pdf_extractor: {e}")
+    get_pdf_extractor = None
+
+try:
+    from config.schemas import CalculationResponse, CalculationSummary, CategorySummary, CalculationRow
+except Exception as e:
+    _import_errors.append(f"config.schemas: {e}")
+    CalculationResponse = None
+    CalculationSummary = None
+    CategorySummary = None
+    CalculationRow = None
 
 MAX_FILE_SIZE = 50 * 1024 * 1024
 
@@ -32,18 +72,30 @@ app.add_middleware(
 @app.get("/api")
 @app.get("/api/")
 async def health():
-    extractor = get_pdf_extractor()
-    return {
+    pdf_available = False
+    if get_pdf_extractor:
+        try:
+            extractor = get_pdf_extractor()
+            pdf_available = extractor.is_available()
+        except Exception:
+            pass
+
+    result = {
         "status": "ok",
         "engine_version": "6.2",
         "architecture": "vercel-serverless",
         "features": {
-            "pdf_parsing": extractor.is_available(),
-            "csv_processing": True,
-            "monte_carlo_uncertainty": True,
+            "pdf_parsing": pdf_available,
+            "csv_processing": pd is not None,
+            "monte_carlo_uncertainty": np is not None,
             "hierarchical_factors": True,
         },
     }
+
+    if _import_errors:
+        result["import_warnings"] = _import_errors
+
+    return result
 
 
 @app.get("/api/factors")
@@ -70,10 +122,13 @@ async def version_info():
 
 @app.post("/api/calculate")
 async def calculate_scope3(files: List[UploadFile] = File(...)):
+    if pd is None or calculate_scope3_with_uncertainty is None:
+        raise HTTPException(500, f"Engine modules failed to load: {_import_errors}")
+
     if not files:
         raise HTTPException(400, "No files uploaded")
 
-    extractor = get_pdf_extractor()
+    extractor = get_pdf_extractor() if get_pdf_extractor else None
     calc_frames = []
     raw_frames = []
 
@@ -97,7 +152,7 @@ async def calculate_scope3(files: List[UploadFile] = File(...)):
                 continue
 
         elif filename.endswith(".pdf"):
-            if not extractor.is_available():
+            if not extractor or not extractor.is_available():
                 raise HTTPException(
                     503,
                     "PDF extraction unavailable - ANTHROPIC_API_KEY not configured"
@@ -142,7 +197,6 @@ async def calculate_scope3(files: List[UploadFile] = File(...)):
         engine_version="6.2",
     )
 
-    from config.schemas import CalculationRow
     normalized_data = [
         CalculationRow(**row)
         for row in calc_df.to_dict(orient="records")
@@ -165,6 +219,3 @@ async def calculate_single_record(
         oil_bbl=oil_bbl, gas_mcf=gas_mcf,
         haul_distance_km=haul_distance_km,
     )
-
-
-# Vercel's @vercel/python natively handles FastAPI's ASGI app
