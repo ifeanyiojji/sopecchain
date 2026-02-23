@@ -4,7 +4,6 @@ ScopeChain AI FastAPI Backend - Vercel Serverless Entry Point
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
-from mangum import Mangum
 import pandas as pd
 import io
 
@@ -168,4 +167,4 @@ async def calculate_single_record(
     )
 
 
-handler = Mangum(app)
+# Vercel's @vercel/python natively handles FastAPI's ASGI app
