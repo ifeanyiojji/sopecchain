@@ -1,0 +1,13 @@
+pandas
+numpy
+pymupdf
+pillow
+openpyxl
+anthropic
+fastapi
+uvicorn
+python-multipart
+pydantic
+mangum
+aiofiles
+tenacity

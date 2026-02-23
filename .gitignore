@@ -1,0 +1,25 @@
+# Node
+node_modules/
+dashboard/.next/
+package-lock.json
+
+# Engine
+__pycache__/
+*.pyc
+engine/*.pkl
+engine/*.bin
+engine/data/
+engine/models/
+engine/cache/
+engine/.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel
+
+# Environment
+.env
+.env.local
