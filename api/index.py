@@ -88,6 +88,14 @@ async def health():
         except Exception:
             pass
 
+    # Debug: show runtime paths
+    debug_info = {
+        "file": os.path.abspath(__file__),
+        "api_dir": api_dir,
+        "sys_path_first_3": sys.path[:3],
+        "api_dir_contents": os.listdir(api_dir) if os.path.isdir(api_dir) else "NOT_A_DIR",
+    }
+
     result = {
         "status": "ok",
         "engine_version": "6.2",
@@ -98,6 +106,7 @@ async def health():
             "monte_carlo_uncertainty": np is not None,
             "hierarchical_factors": True,
         },
+        "debug": debug_info,
     }
 
     if _import_errors:
