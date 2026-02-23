@@ -1,0 +1,9 @@
+pandas
+numpy
+pymupdf
+pillow
+anthropic
+fastapi
+python-multipart
+pydantic
+mangum

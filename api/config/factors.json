@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-02-11",
+    "maintained_by": "ScopeChain AI Engineering",
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2025-02-11",
+        "changes": "Initial factor database - GHG Protocol 2023 baseline"
+      }
+    ]
+  },
+  "factors": {
+    "diesel_l_tco2e_per_l": {
+      "default": {
+        "value": 0.0027,
+        "uncertainty_pct": 15.0,
+        "source": "GHG Protocol 2023",
+        "version": "v1",
+        "notes": "Well-to-wheel combustion emissions for diesel fuel"
+      },
+      "national_canada": {
+        "value": 0.00269,
+        "uncertainty_pct": 12.0,
+        "source": "Environment Canada 2024",
+        "version": "v1",
+        "notes": "Canada-specific diesel emission factor"
+      }
+    },
+    "oil_bbl_tco2e": {
+      "default": {
+        "value": 0.430,
+        "uncertainty_pct": 18.0,
+        "source": "GHG Protocol 2023",
+        "version": "v1",
+        "notes": "End-use combustion of crude oil products"
+      }
+    },
+    "gas_mcf_tco2e": {
+      "default": {
+        "value": 0.056,
+        "uncertainty_pct": 20.0,
+        "source": "GHG Protocol 2023",
+        "version": "v1",
+        "notes": "Natural gas combustion emissions per MCF"
+      }
+    },
+    "water_trucking_tco2e_per_tonne_km": {
+      "default": {
+        "value": 0.00020,
+        "uncertainty_pct": 25.0,
+        "source": "ICCT Truck Study 2024",
+        "version": "v1",
+        "notes": "Heavy-duty trucking emissions for water hauling"
+      },
+      "region_alberta": {
+        "value": 0.00018,
+        "uncertainty_pct": 22.0,
+        "source": "Alberta Transport Emissions Model 2024",
+        "version": "v1",
+        "notes": "Alberta-specific trucking factor (cleaner fleet)"
+      }
+    }
+  },
+  "hierarchy_rules": {
+    "resolution_order": [
+      "company",
+      "supplier",
+      "region",
+      "national",
+      "default"
+    ],
+    "description": "Factor resolution follows this hierarchy. If 'company_suncor' exists, use it; else check 'supplier_halliburton', then 'region_alberta', then 'national_canada', finally 'default'."
+  }
+}

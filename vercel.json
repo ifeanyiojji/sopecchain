@@ -1,6 +1,24 @@
 {
-  "framework": "nextjs",
-  "installCommand": "npm install && cd dashboard && npm install",
-  "buildCommand": "cd dashboard && npm run build",
-  "outputDirectory": "dashboard/.next"
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "50mb" }
+    },
+    {
+      "src": "dashboard/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dashboard/$1"
+    }
+  ]
 }
